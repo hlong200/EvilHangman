@@ -32,14 +32,29 @@ Game::Game() {
 
     cout << "Letters loaded!" << endl;
 
+    /*
+    try {
+        testBkg = new Image(RES_IMG + "doctor1.txt");
+    }
+    catch (const string& fileName) {
+        cerr << fileName << " could not be opened!" << endl;
+    }
+    testBkg->setLocation(Vec2i(0, 0));
+    testBkg->draw(g);
+    //drawables.push_back(testBkg);
+    */
+
+    sceneBorder = new Rectangle(10, 10, size.x - 20, 500, BLACK, false);
+    drawables.push_back(sceneBorder);
+
     tField = new TextField("Hello World!");
     tField->setLocation(Vec2i(100, 100));
     tField->setFgColor(BLUE);
     
 
-    testRect = new Rectangle(50, 50, size.x - 100, size.y - 100);
-    testRect->setColor(RED);
-    drawables.push_back(testRect);
+    //testRect = new Rectangle(50, size.y - 16 - 50, size.x - 100, size.y - 100);
+    //testRect->setColor(RED);
+    //drawables.push_back(testRect);
 
     testButton = new Button("This is a test!");
     testButton->setLocation(Vec2i(400, 400));
@@ -47,7 +62,14 @@ Game::Game() {
     drawables.push_back(testButton);
     drawables.push_back(tField);
 
+    testCircle = new Circle(Vec2i(size.x/2, size.y/2), 75, VIOLET, false);
+    drawables.push_back(testCircle);
+
+    dave = new StickMan(Vec2i(350, 350), BLACK);
+    drawables.push_back(dave);
+
     mainLoop();
+
 }
 
 void Game::mainLoop() {
@@ -61,10 +83,6 @@ void Game::mainLoop() {
             g->getKey();
         }
         quit = g->getQuit();
-
-        g->update();
-        g->Sleep(16);
-        g->clear();
     }
 
     SDL_WaitThread(updateThread, NULL);
@@ -75,7 +93,7 @@ int update(void* data) {
 
     while (!game->g->getQuit()) {
         for (int i = 0; i < game->drawables.size(); i++) {
-            game->drawables[i]->update(game->g);
+            game->drawables[i]->update(game->g, game);
         }
     }
 
@@ -86,6 +104,8 @@ void Game::draw() {
     for (int i = 0; i < drawables.size(); i++) {
         drawables[i]->draw(g);
     }
+    g->update();
+    g->Sleep(10);
 }
 
 Game::~Game()
@@ -94,6 +114,7 @@ Game::~Game()
 
 void plot(SDL_Plotter * g, const Vec2i & p, const Color& color) {
   if (p.x >= 0 && p.x < g->getCol() && p.y >= 0 && p.y < g->getRow()) {
+      //cout << (int)color.r << " " << (int)color.g << " " << (int)color.b << endl;
     g->plotPixel(p.x, p.y, color.r, color.g, color.b);
   }
 }
@@ -124,9 +145,11 @@ Color::Color() {
   r = g = b = 0;
 }
 
-Color::Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
-
-Color::Color(int r, int g, int b) : r(uint8_t(r)), g(uint8_t(g)), b(uint8_t(b)) {}
+Color::Color(unsigned char r, unsigned char g, unsigned char b) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+}
 
 Color Color::operator+(const Color & other) {
   Color result(other.r + r, other.g + g, other.b + b);
@@ -214,9 +237,21 @@ void drawLine(SDL_Plotter* g, const Vec2i& p1, const Vec2i& p2, const Color& col
     }
 }
 
-void drawRectangle(SDL_Plotter * g, const Vec2i & location, const Vec2i & size, const Color & color, bool fill) {
-    for (int y = 0; y < size.y; y++) {
-        drawLine(g, Vec2i(location.x, location.y + y), Vec2i(location.x + size.x, location.y + y), color);
+void drawRectangle(SDL_Plotter * g, const Rectangle& rect) {
+    if (rect.getFilled()) {
+        for (int y = 0; y < rect.getHeight(); y++) {
+            drawLine(g, Vec2i(rect.getLocation().x, rect.getLocation().y + y), Vec2i(rect.getLocation().x + rect.getWidth(), rect.getLocation().y + y), rect.getColor());
+        }
+    }
+    else {
+        // Top line
+        drawLine(g, rect.getLocation(), rect.getLocation() + Vec2i(rect.getWidth(), 0), rect.getColor());
+        // Left line
+        drawLine(g, rect.getLocation(), rect.getLocation() + Vec2i(0, rect.getHeight()), rect.getColor());
+        // Right line
+        drawLine(g, rect.getLocation() + Vec2i(rect.getWidth(), 0), rect.getLocation() + Vec2i(rect.getWidth(), rect.getHeight()), rect.getColor());
+        // Bottom line
+        drawLine(g, rect.getLocation() + Vec2i(0, rect.getHeight()), rect.getLocation() + Vec2i(rect.getWidth(), rect.getHeight()), rect.getColor());
     }
 }
 
@@ -226,21 +261,40 @@ Line::Line(const Vec2i & p1, const Vec2i & p2) : p1(p1), p2(p2) {}
 
 Line::Line(int x1, int y1, int x2, int y2) : p1(x1, y1), p2(x2, y2) {}
 
+Vec2i Line::getP1() const {
+    return p1;
+}
+Vec2i Line::getP2() const {
+    return p2;
+}
+Color Line::getColor() const {
+    return color;
+}
+void Line::setP1(const Vec2i& other) {
+    p1 = other;
+}
+void Line::setP2(const Vec2i& other) {
+    p2 = other;
+}
+void Line::setColor(const Color& color) {
+    this->color = color;
+}
+
 void Line::draw(SDL_Plotter * g) {
     drawLine(g, p1, p2, color);
 }
 
-void Line::update(SDL_Plotter * g) {}
+void Line::update(SDL_Plotter * g, Game* game) {}
 
 Rectangle::Rectangle() {
 
 }
 
-Rectangle::Rectangle(const Vec2i & location, const Vec2i & size) : location(location), size(size) {}
+Rectangle::Rectangle(const Vec2i & location, const Vec2i & size, const Color& color, bool filled) : location(location), size(size), color(color), fill(filled) {}
 
-Rectangle::Rectangle(const Vec2i & location, int width, int height) : Rectangle(location, Vec2i(width, height)) {}
+Rectangle::Rectangle(const Vec2i & location, int width, int height, const Color& color, bool filled) : Rectangle(location, Vec2i(width, height), color, filled) {}
 
-Rectangle::Rectangle(int x, int y, int width, int height) : Rectangle(Vec2i(x, y), Vec2i(width, height)) {}
+Rectangle::Rectangle(int x, int y, int width, int height, const Color& color, bool filled) : Rectangle(Vec2i(x, y), Vec2i(width, height), color, filled) {}
 
 Vec2i Rectangle::getLocation() const {
     return location;
@@ -306,11 +360,11 @@ void Rectangle::setHeight(int height) {
     size.y = height;
 }
 
-void Rectangle::update(SDL_Plotter * g) {
+void Rectangle::update(SDL_Plotter * g, Game* game) {
 }
 
 void Rectangle::draw(SDL_Plotter * g) {
-    drawRectangle(g, location, size, color, true);
+    drawRectangle(g, *this);
 }
 
 Pane::Pane(Pane * parent, Vec2i offset) {
@@ -359,7 +413,72 @@ void Pane::setSize(const Vec2i & size) {
 
 void Pane::draw(SDL_Plotter * g) {}
 
-void Pane::update(SDL_Plotter * g) {}
+void Pane::update(SDL_Plotter * g, Game* game) {}
+
+void drawCircle(SDL_Plotter* g, const Circle& circle) {
+    Vec2i curLoc;
+    for (int x = circle.getLocation().x - circle.getRadius(); x < circle.getLocation().x + circle.getRadius(); x++) {
+        for (int y = circle.getLocation().y - circle.getRadius(); y < circle.getLocation().y + circle.getRadius(); y++) {
+            curLoc = Vec2i(x, y);
+
+            if (circle.getLocation().dist(curLoc) <= circle.getRadius()) {
+                if (circle.getFilled()) {
+                    plot(g, curLoc, circle.getColor());
+                }
+                else if (circle.getLocation().dist(curLoc) > circle.getRadius() - 1) {
+                    plot(g, curLoc, circle.getColor());
+                }
+            }
+        }
+    }
+}
+
+Circle::Circle(const Vec2i& location, int radius, const Color& color, bool filled) {
+    this->location = location;
+    this->radius = radius;
+    this->color = color;
+    this->fill = filled;
+}
+
+Vec2i Circle::getLocation() const {
+    return location;
+}
+
+int Circle::getRadius() const {
+    return radius;
+}
+
+Color Circle::getColor() const {
+    return color;
+}
+
+bool Circle::getFilled() const {
+    return fill;
+}
+
+void Circle::setLocation(const Vec2i& location) {
+    this->location = location;
+}
+
+void Circle::setRadius(int radius) {
+    this->radius = radius;
+}
+
+void Circle::setColor(const Color& color) {
+    this->color = color;
+}
+
+void Circle::setFilled(bool filled) {
+    fill = filled;
+}
+
+void Circle::update(SDL_Plotter* g, Game* game) {
+
+}
+
+void Circle::draw(SDL_Plotter* g) {
+    drawCircle(g, *this);
+}
 
 Image::Image(const string & fileName) {
   load(fileName);
@@ -370,31 +489,33 @@ void Image::load(const string & fileName) {
   if (!file) {
     throw fileName;
   }
-  file >> size.x >> size.y;
-  Color tmp;
+  file >> size.y >> size.x;
+  int r, g, b;
 
   for (int i = 0; i < size.x * size.y; i++) {
-    file >> tmp.r >> tmp.g >> tmp.b;
-    data.push_back(tmp);
+    file >> r >> g >> b;
+    data.push_back(Color(r, g, b));
   }
 }
 
 void Image::draw(SDL_Plotter * g) {
-  Vec2i drawLoc;
-  if (parent == nullptr) {
-    drawLoc = location;
-  }
-  else {
-    drawLoc = parent->getLocation() + offset;
-  }
-  for (int r = 0; r < size.y; r++) {
-    for (int c = 0; c < size.x; c++) {
-      plot(g, drawLoc, data[r * size.x + c]);
+    Vec2i drawLoc;
+    if (parent == nullptr) {
+        drawLoc = location;
     }
-  }
+    else {
+        drawLoc = parent->getLocation() + offset;
+    }
+    for (int r = 0; r < size.y; r++) {
+        for (int c = 0; c < size.x; c++) {
+            Color col = data[r * size.x + c];
+            //cout << "(" << (int)col.r << "," << (int)col.g << "," << (int)col.b << ")" << endl;
+            plot(g, drawLoc + Vec2i(c, r), data[r * size.x + c]);
+        }
+    }
 }
 
-void Image::update(SDL_Plotter * g) {}
+void Image::update(SDL_Plotter * g, Game* game) {}
 
 Vec2i::Vec2i() : x(0), y(0) {}
 
@@ -413,6 +534,10 @@ Vec2i & Vec2i::operator+=(const Vec2i & other) {
   x += other.x;
   y += other.y;
   return *this;
+}
+
+double Vec2i::dist(const Vec2i& other) {
+    return sqrt(pow(x - other.x, 2.0) + pow(y - other.y, 2.0));
 }
 
 TextField::TextField() : Pane(nullptr) {
@@ -459,14 +584,16 @@ void TextField::draw(SDL_Plotter * g) {
     }
 }
 
-void TextField::update(SDL_Plotter * g) {
+void TextField::update(SDL_Plotter * g, Game* game) {
     char key = g->getKey();
     if (g->kbhit()) {
         if (key == '<') {
             setText(text.substr(0, text.size() - 1));
+            g->clear();
         }
-        else if(isalnum(key) || key == ' ') {
+        else if(isalnum(key) || key == ' ' || key == '!') {
             setText(text + key);
+            g->clear();
         }
     }
 }
@@ -530,45 +657,82 @@ void Char::draw(SDL_Plotter * g) {
   }
 }
 
-void Char::update(SDL_Plotter * g) {}
+void Char::update(SDL_Plotter * g, Game* game) {}
 
 
 Button::Button(const string & text) : tField(TextField(text)) {
-
+    leave = true;
 }
 
 void Button::onHover(const Vec2i & location) {
-    
-}
-
-void Button::onClick(const Vec2i & location) {
-    if (color == BLUE) {
-        color = INDIGO;
+    if (leave) {
+        color = GRAY;
     }
     else {
-        color = BLUE;
+        color = ORANGE;
     }
+}
+
+void Button::onClick(const Vec2i & location, Game* game) {
+    game->dave->removePart();
+    game->g->clear();
 }
 
 void Button::draw(SDL_Plotter * g) {
-    drawRectangle(g, location, size, color, true);
+    drawRectangle(g, Rectangle(location, size, color, true));
 }
 
-void Button::update(SDL_Plotter * g) {
+void Button::update(SDL_Plotter * g, Game* game) {
     Vec2i mouseLoc;
     if (g->getMouseClick(mouseLoc.x, mouseLoc.y)) {
         if (inside(mouseLoc)) {
-            onClick(mouseLoc);
+            onClick(mouseLoc, game);
         }
     }
     if (g->getMouseMotion(mouseLoc.x, mouseLoc.y)) {
         if (inside(mouseLoc)) {
-            onHover(mouseLoc);
+            if (leave != false) {
+                leave = false;
+            }
         }
+        else {
+            if (leave != true) {
+                leave = true;
+            }
+        }
+        onHover(mouseLoc);
     }
 }
 
 void Button::setLocation(const Vec2i & location) {
     Pane::setLocation(location);
     tField.setLocation(location);
+}
+
+StickMan::StickMan(const Vec2i& location, const Color& color) {
+    body.push_back(new Circle(location, 10, color, false));
+    body.push_back(new Line(Vec2i(location.x, location.y + 10), Vec2i(location.x, location.y + 50)));
+    body.push_back(new Line(((Line*)body[1])->getP2(), ((Line*)body[1])->getP2() + Vec2i(-18, 24)));
+    body.push_back(new Line(((Line*)body[1])->getP2(), ((Line*)body[1])->getP2() + Vec2i(18, 24)));
+    body.push_back(new Line(((Line*)body[1])->getP2() + Vec2i(0, -30), ((Line*)body[1])->getP2() + Vec2i(-12, -10)));
+    body.push_back(new Line(((Line*)body[1])->getP2() + Vec2i(0, -30), ((Line*)body[1])->getP2() + Vec2i(12, -10)));
+}
+void StickMan::removePart() {
+    if (!body.empty()) {
+        body.pop_back();
+    }
+}
+bool StickMan::dead() const {
+    return body.empty();
+}
+
+void StickMan::update(SDL_Plotter* g, Game* game) {
+    for (int i = 0; i < body.size(); i++) {
+        body[i]->update(g, game);
+    }
+}
+void StickMan::draw(SDL_Plotter* g) {
+    for (int i = 0; i < body.size(); i++) {
+        body[i]->draw(g);
+    }
 }

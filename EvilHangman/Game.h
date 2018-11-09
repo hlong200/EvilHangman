@@ -11,6 +11,9 @@ class SDL_Plotter;
 class TextField;
 class Rectangle;
 class Button;
+class Image;
+class Circle;
+class StickMan;
 
 // TODO: Implement saving state for resuming game later
 struct GameState {
@@ -35,8 +38,13 @@ private:
     Rectangle* testRect;
     Button* testButton;
     SDL_cond* cond;
+    Image* testBkg;
+    Circle* testCircle;
+    StickMan* dave;
+    Rectangle* sceneBorder;
     bool quit;
     friend int update(void* data);
+    friend class Button;
 public:
     Game();
     void mainLoop();

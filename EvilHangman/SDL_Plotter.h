@@ -271,6 +271,7 @@ char SDL_Plotter::getKey() {
     if (currentKeyStates[SDL_SCANCODE_RETURN]) key = SDL_SCANCODE_RETURN;
     if (currentKeyStates[SDL_SCANCODE_ESCAPE]) quit = true;
     if (currentKeyStates[SDL_SCANCODE_BACKSPACE]) key = '<';
+    if (currentKeyStates[SDL_SCANCODE_KP_EXCLAM]) key = '!';
 
     return key;
 }

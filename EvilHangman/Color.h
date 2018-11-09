@@ -3,10 +3,9 @@
 #include <cstdint>
 
 struct Color {
-    uint8_t r, g, b;
+    unsigned char r, g, b;
     Color();
-    Color(uint8_t r, uint8_t g, uint8_t b);
-    Color(int r, int g, int b);
+    Color(unsigned char r, unsigned char g, unsigned char b);
     Color operator+(const Color& other);
     Color& operator+=(const Color& other);
     bool operator==(const Color& other);
@@ -21,3 +20,4 @@ const Color GREEN(0, 100, 0);
 const Color BLUE(0, 0, 255);
 const Color INDIGO(75, 0, 130);
 const Color VIOLET(238, 130, 238);
+const Color GRAY(64, 64, 64);

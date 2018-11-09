@@ -17,4 +17,5 @@ struct Vec2i {
     Vec2i(const Vec2f& other);
     Vec2i operator+(const Vec2i& other);
     Vec2i& operator+=(const Vec2i& other);
+    double dist(const Vec2i& other);
 };
