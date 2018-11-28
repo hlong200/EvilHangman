@@ -1,5 +1,9 @@
 #pragma once
 
+#include <ostream>
+
+using namespace std;
+
 struct Vec2f {
     float x, y;
     Vec2f();
@@ -18,4 +22,7 @@ struct Vec2i {
     Vec2i operator+(const Vec2i& other);
     Vec2i& operator+=(const Vec2i& other);
     double dist(const Vec2i& other);
+    friend ostream& operator<<(ostream& os, const Vec2i& vec2i);
 };
+
+ostream& operator<<(ostream& os, const Vec2i& vec2i);

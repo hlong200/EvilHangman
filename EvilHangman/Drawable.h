@@ -13,6 +13,7 @@ class SDL_Plotter;
 struct Drawable {
     virtual void draw(SDL_Plotter* g) = 0;
     virtual void update(SDL_Plotter* g, Game* game) = 0;
+    bool visible = true;
 };
 
 void drawLine(SDL_Plotter* g, const Vec2i& p1, const Vec2i& p2, const Color& color);
@@ -161,6 +162,7 @@ public:
     void setFgColor(const Color& color);
     void draw(SDL_Plotter* g);
     void update(SDL_Plotter* g, Game* game);
+    void setOffset(const Vec2i& offset);
 };
 
 class StickMan : public Drawable {
@@ -169,21 +171,27 @@ private:
 public:
     StickMan(const Vec2i& location = Vec2i(), const Color& color = BLACK);
     void removePart();
+    void addPart();
     bool dead() const;
     void update(SDL_Plotter* g, Game* game);
     void draw(SDL_Plotter* g);
 };
 
+class Game;
+
 class Button : public Pane {
 private:
-    TextField tField;
+    TextField* tField;
     Color color;
     bool leave;
+    void (*action)(Game* game);
 public:
-    Button(const string& text);
+    Button(const string& text, void (*action)(Game* game));
     void onHover(const Vec2i& location);
     void onClick(const Vec2i& location, Game* game);
     void draw(SDL_Plotter* g);
     void update(SDL_Plotter* g, Game* game);
     void setLocation(const Vec2i& location);
+    void setOffset(const Vec2i& offset);
+    void setFgColor(const Color& color);
 };

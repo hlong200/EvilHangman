@@ -21,3 +21,4 @@ const Color BLUE(0, 0, 255);
 const Color INDIGO(75, 0, 130);
 const Color VIOLET(238, 130, 238);
 const Color GRAY(64, 64, 64);
+const Color HOVER_COLOR = GRAY;
