@@ -36,16 +36,20 @@ Game::Game() {
     optionsButton = new Button("OPTIONS", optionsAction);
     quitButton = new Button("QUIT", quitAction);
     logo->setLocation(Vec2i(size.x / 2.0 - logo->getSize().x / 2, 25));
-    playButton->setLocation(logo->getLocation() + Vec2i(0, 128+32));
+    playButton->setLocation(logo->getLocation() + Vec2i(0, 128+32*3));
     playButton->setFgColor(_WHITE);
-    optionsButton->setLocation(playButton->getLocation() + Vec2i(0, 32));
+    playButton->setScale(3);
+    optionsButton->setLocation(playButton->getLocation() + Vec2i(0, 32*3));
     optionsButton->setFgColor(_WHITE);
-    quitButton->setLocation(optionsButton->getLocation() + Vec2i(0, 32));
+    optionsButton->setScale(3);
+    quitButton->setLocation(optionsButton->getLocation() + Vec2i(0, 32*3));
     quitButton->setFgColor(_WHITE);
-    mainMenu.push_back(logo);
+    quitButton->setScale(3);
+    //mainMenu.push_back(logo);
     mainMenu.push_back(playButton);
     mainMenu.push_back(optionsButton);
     mainMenu.push_back(quitButton);
+    
 
     mainLoop();
 }
@@ -617,6 +621,13 @@ void TextField::setOffset(const Vec2i& offset) {
     }
 }
 
+void TextField::setScale(int scale) {
+    for (int i = 0; i < field.size(); i++) {
+        field[i].setScale(scale);
+        field[i].setOffset(Vec2i(i * CHAR_SIZE * scale, 0));
+    }
+}
+
 Char::Char() {
   id = '\0';
   size = 0;
@@ -624,7 +635,7 @@ Char::Char() {
   color = BLACK;
 }
 
-Char::Char(char id, unsigned short size) : Pane(nullptr) {
+Char::Char(char id, int size) : Pane(nullptr) {
   this->id = id;
   this->size = size;
   this->scale = 1;
@@ -668,10 +679,19 @@ void Char::draw(SDL_Plotter * g) {
 
         //cout << "Drawing " << this->id << " at " << drawLoc.x << ", " << drawLoc.y << endl;
 
-        for (int r = 0; r < size; r++) {
-            for (int c = 0; c < size; c++) {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                /*
                 if (data[r * size + c] == uint8_t(49)) {
                     plot(g, drawLoc + Vec2i(c, r), color);
+                    drawRectangle(g, Rectangle(0, 0, 0, 0));
+                }
+                */
+
+                for (int _x = 0; _x < scale; _x++) {
+                    for (int _y = 0; _y < scale; _y++) {
+                        if (data[y * size + x] == uint8_t(49)) plot(g, Vec2i(drawLoc.x + _x + x * scale, drawLoc.y + _y + y * scale), color);
+                    }
                 }
             }
         }
@@ -679,6 +699,10 @@ void Char::draw(SDL_Plotter * g) {
 }
 
 void Char::update(SDL_Plotter * g, Game* game) {}
+
+void Char::setScale(int scale) {
+    this->scale = scale;
+}
 
 
 void playAction(Game* game) {
@@ -764,6 +788,15 @@ void Button::setOffset(const Vec2i& offset) {
 
 void Button::setFgColor(const Color& color) {
     tField->setFgColor(color);
+}
+
+void Button::setScale(int scale) {
+    tField->setScale(scale);
+    size = Vec2i(size.x * scale, size.y * scale);
+}
+
+TextField& Button::getField() {
+    return *tField;
 }
 
 StickMan::StickMan(const Vec2i& location, const Color& color) {

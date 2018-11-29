@@ -39,7 +39,6 @@ private:
     vector<Drawable *> playScreen;
     TextField* tField;
     Drawable* focus;
-    Rectangle* testRect;
 
     // Order in drawable* vector determines draw order; thus, greater index -> higher layer in draw
     
@@ -72,6 +71,8 @@ private:
     friend int update(void* data);
     friend void changeState(Game* game);
     friend class Button;
+
+    void loadFont();
 public:
     Game();
     void mainLoop();

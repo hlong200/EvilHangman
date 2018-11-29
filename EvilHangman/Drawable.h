@@ -10,6 +10,8 @@ using namespace std;
 
 class SDL_Plotter;
 
+char font[40][7][9];
+
 struct Drawable {
     virtual void draw(SDL_Plotter* g) = 0;
     virtual void update(SDL_Plotter* g, Game* game) = 0;
@@ -128,17 +130,18 @@ class Char : public Pane {
 private:
     char id;
     vector<uint8_t> data;
-    unsigned short size;
+    int size;
     unsigned short scale;
     Color color;
 public:
     Char();
-    Char(char id, unsigned short size);
+    Char(char id, int size);
     char getId() const;
     void loadChar(const string& fileName);
     void setColor(const Color& color);
     void draw(SDL_Plotter* g);
     void update(SDL_Plotter* g, Game* game);
+    void setScale(int scale);
 };
 
 const short CHAR_SIZE = 16;
@@ -163,6 +166,7 @@ public:
     void draw(SDL_Plotter* g);
     void update(SDL_Plotter* g, Game* game);
     void setOffset(const Vec2i& offset);
+    void setScale(int scale);
 };
 
 class StickMan : public Drawable {
@@ -194,4 +198,6 @@ public:
     void setLocation(const Vec2i& location);
     void setOffset(const Vec2i& offset);
     void setFgColor(const Color& color);
+    TextField& getField();
+    void setScale(int scale);
 };
